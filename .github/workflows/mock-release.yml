@@ -1,0 +1,81 @@
+name: Module 03 - Mock Release (Tags)
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - "v*"
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  standard-build:
+    name: Standard build (runs on pushes/PRs)
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 + Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Make mvnw executable
+        run: chmod +x mvnw
+
+      - name: Build (package)
+        run: ./mvnw -B -ntp clean package
+
+  release:
+    name: Release build (runs only on tag push)
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 + Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Make mvnw executable
+        run: chmod +x mvnw
+
+      - name: Build JAR
+        run: ./mvnw -B -ntp clean package
+
+      - name: Rename JAR to include tag
+        shell: bash
+        run: |
+          TAG="${{ github.ref_name }}"   # e.g. v1.0.0
+          mkdir -p dist
+
+          # Pick the main jar (exclude common extra jars like original-* if present)
+          JAR_PATH="$(ls -1 target/*.jar | grep -vE 'original-|sources|javadoc' | head -n 1)"
+
+          if [ -z "$JAR_PATH" ]; then
+            echo "No runnable JAR found in target/. موجود؟"
+            ls -la target
+            exit 1
+          fi
+
+          cp "$JAR_PATH" "dist/myapp-${TAG}.jar"
+          echo "Packaged: dist/myapp-${TAG}.jar"
+
+      - name: Create GitHub Release and upload JAR
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: dist/myapp-${{ github.ref_name }}.jar
