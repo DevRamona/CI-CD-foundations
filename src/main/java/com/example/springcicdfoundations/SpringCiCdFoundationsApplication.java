@@ -6,8 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SpringCiCdFoundationsApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SpringCiCdFoundationsApplication.class, args);
-    }
-
+  public static void main(String[] args) {
+    SpringApplication.run(SpringCiCdFoundationsApplication.class, args);
+  }
 }
