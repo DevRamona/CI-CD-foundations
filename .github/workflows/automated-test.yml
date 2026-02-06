@@ -26,6 +26,12 @@ jobs:
       - name: Make mvn executable
         run: chmod +x mvnw
 
+      - name: Clean compile
+        run: ./mvnw -B -ntp clean compile
+
+      - name: Style Check (Spotless)
+        run: ./mvnw -B -ntp spotless:check
+
       - name: Run unit tests
         run: ./mvnw test
 
