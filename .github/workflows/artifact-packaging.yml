@@ -1,0 +1,40 @@
+name: Module 3 - Artifact Packaging & Archiving
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+
+jobs:
+  package-and-archive:
+    name: Package JAR and upload artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+            distribution: "temurin"
+            java-version: "21"
+            cache: maven
+
+      - name: Make mvnw executable
+        run: chmod +x mvnw
+
+      - name: Package application (JAR)
+        run: ./mvnw -B -ntp clean package
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+          if-no-files-found: error
+          retention-days: 7
